@@ -1,0 +1,17 @@
+{
+    "version": 2,
+    "functions": {
+        "dashboard-api.js": {
+            "runtime": "@vercel/node"
+        }
+    },
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "dashboard-api.js"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
+}

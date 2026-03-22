@@ -10,6 +10,8 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -23,20 +25,52 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Paiz-king';
 
 // Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname))); // Serve static files
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true
 }));
 
 // ==================== AUTHENTICATION ====================
-function generateToken(email, username) {
-    return Buffer.from(email + ':' + username + ':' + Date.now()).toString('base64');
-}
 
+// Root route - serve login page
+app.get('/', (req, res) => {
+    const token = req.query.token || req.headers.authorization?.split(' ')[1];
+    
+    if (token && verifyToken(token)) {
+        // User already logged in, serve dashboard
+        res.sendFile(path.join(__dirname, 'dashboard.html'));
+    } else {
+        // Serve login page
+        res.sendFile(path.join(__dirname, 'login.html'));
+    }
+});
+
+// ==================== AUTHENTICATION ====================
+
+// Token verification function
 function verifyToken(token) {
     if (!token || token === 'undefined') return false;
     // Simple token verification - in production use JWT
     return token.includes(':');
+}
+
+// Root route - serve login page
+app.get('/', (req, res) => {
+    const token = req.query.token || req.headers.authorization?.split(' ')[1];
+    
+    if (token && verifyToken(token)) {
+        // User already logged in, serve dashboard
+        res.sendFile(path.join(__dirname, 'dashboard.html'));
+    } else {
+        // Serve login page
+        res.sendFile(path.join(__dirname, 'login.html'));
+    }
+});
+
+// ==================== AUTHENTICATION ====================
+function generateToken(email, username) {
+    return Buffer.from(email + ':' + username + ':' + Date.now()).toString('base64');
 }
 
 const authMiddleware = (req, res, next) => {

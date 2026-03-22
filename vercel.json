@@ -1,16 +1,14 @@
 {
     "version": 2,
+    "functions": {
+        "dashboard-api.js": {
+            "runtime": "nodejs20.x"
+        }
+    },
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "dashboard-api.js"
-        },
-        {
             "src": "/(.*)",
-            "dest": "dashboard-api.js"
+            "dest": "/dashboard-api.js"
         }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    }
+    ]
 }

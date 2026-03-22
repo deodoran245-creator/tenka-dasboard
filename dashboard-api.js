@@ -644,6 +644,81 @@ app.post('/api/settings/regenerate-key', authMiddleware, async (req, res) => {
     }
 });
 
+// ==================== BOT CONTROL ROUTES ====================
+app.post('/api/bot/restart', authMiddleware, async (req, res) => {
+    try {
+        const response = await axios.post(`${BOT_API_URL}/restart`);
+        
+        res.json({
+            success: true,
+            message: 'Bot restart initiated',
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Bot restart error:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to restart bot'
+        });
+    }
+});
+
+app.post('/api/bot/stop', authMiddleware, async (req, res) => {
+    try {
+        const response = await axios.post(`${BOT_API_URL}/stop`);
+        
+        res.json({
+            success: true,
+            message: 'Bot stop initiated',
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Bot stop error:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to stop bot'
+        });
+    }
+});
+
+app.post('/api/bot/start', authMiddleware, async (req, res) => {
+    try {
+        const response = await axios.post(`${BOT_API_URL}/start`);
+        
+        res.json({
+            success: true,
+            message: 'Bot start initiated',
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Bot start error:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to start bot'
+        });
+    }
+});
+
+app.get('/api/bot/status', authMiddleware, async (req, res) => {
+    try {
+        const response = await axios.get(`${BOT_API_URL}/status`);
+        
+        res.json({
+            success: true,
+            status: response.data?.status || 'unknown',
+            uptime: response.data?.uptime || 0,
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Bot status error:', error.message);
+        res.json({
+            success: false,
+            status: 'offline',
+            uptime: 0
+        });
+    }
+});
+
 // ==================== DASHBOARD CREDENTIALS MANAGEMENT ====================
 app.get('/api/credentials', authMiddleware, async (req, res) => {
     try {

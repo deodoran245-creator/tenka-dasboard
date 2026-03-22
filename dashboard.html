@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Sidebar Navigation -->
@@ -53,6 +55,10 @@
                 <a href="#" class="nav-item" data-section="credentials">
                     <i class="fas fa-key"></i>
                     <span>Credentials</span>
+                </a>
+                <a href="#" class="nav-item" data-section="bot-control">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Bot Control</span>
                 </a>
             </nav>
 
@@ -284,7 +290,8 @@
                 <section id="users-section" class="section">
                     <div class="section-header">
                         <h1>User Management</h1>
-                        <input type="text" placeholder="Search users..." id="userSearch" class="form-control" style="max-width: 300px;">
+                        <input type="text" placeholder="Search users..." id="userSearch" class="form-control"
+                            style="max-width: 300px;">
                     </div>
 
                     <div class="card">
@@ -313,7 +320,8 @@
                 <section id="groups-section" class="section">
                     <div class="section-header">
                         <h1>Group Management</h1>
-                        <input type="text" placeholder="Search groups..." id="groupSearch" class="form-control" style="max-width: 300px;">
+                        <input type="text" placeholder="Search groups..." id="groupSearch" class="form-control"
+                            style="max-width: 300px;">
                     </div>
 
                     <div class="card">
@@ -420,15 +428,18 @@
                             </div>
                             <div class="form-group">
                                 <label for="newUsername">New Username</label>
-                                <input type="text" id="newUsername" class="form-control" placeholder="Enter new username">
+                                <input type="text" id="newUsername" class="form-control"
+                                    placeholder="Enter new username">
                             </div>
                             <div class="form-group">
                                 <label for="newPassword">New Password</label>
-                                <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                                <input type="password" id="newPassword" class="form-control"
+                                    placeholder="Enter new password">
                             </div>
                             <div class="form-group">
                                 <label for="confirmPassword">Confirm Password</label>
-                                <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
+                                <input type="password" id="confirmPassword" class="form-control"
+                                    placeholder="Confirm new password">
                             </div>
                             <div class="form-actions">
                                 <button type="button" class="btn btn-success" id="updateAllCredentialsBtn">
@@ -452,8 +463,106 @@
                         <ul class="security-notes">
                             <li><i class="fas fa-shield-alt"></i> Credentials are stored securely in the .env file</li>
                             <li><i class="fas fa-key"></i> Changes take effect immediately after update</li>
-                            <li><i class="fas fa-exclamation-triangle"></i> Make sure to remember your new credentials</li>
+                            <li><i class="fas fa-exclamation-triangle"></i> Make sure to remember your new credentials
+                            </li>
                             <li><i class="fas fa-robot"></i> You can also change credentials via bot commands</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Bot Control Section -->
+                <section id="bot-control-section" class="section">
+                    <div class="section-header">
+                        <h1>Bot Control Panel</h1>
+                        <button class="btn btn-primary" id="refreshBotStatus">
+                            <i class="fas fa-sync-alt"></i> Check Status
+                        </button>
+                    </div>
+
+                    <div class="bot-control-grid">
+                        <div class="card bot-status-card">
+                            <h3><i class="fas fa-info-circle"></i> Bot Status</h3>
+                            <div class="status-display">
+                                <div class="status-item">
+                                    <span class="status-label">Current Status:</span>
+                                    <span class="status-value" id="currentBotStatus">Checking...</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Uptime:</span>
+                                    <span class="status-value" id="botUptime">0 seconds</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Last Check:</span>
+                                    <span class="status-value" id="lastStatusCheck">Never</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bot-controls-card">
+                            <h3><i class="fas fa-sliders-h"></i> Control Actions</h3>
+                            <div class="control-buttons">
+                                <button class="btn btn-success btn-lg" id="startBotBtn">
+                                    <i class="fas fa-play"></i>
+                                    <span>Start Bot</span>
+                                </button>
+                                <button class="btn btn-warning btn-lg" id="restartBotBtn">
+                                    <i class="fas fa-redo"></i>
+                                    <span>Restart Bot</span>
+                                </button>
+                                <button class="btn btn-danger btn-lg" id="stopBotBtn">
+                                    <i class="fas fa-stop"></i>
+                                    <span>Stop Bot</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card bot-logs-card">
+                            <h3><i class="fas fa-terminal"></i> Recent Actions</h3>
+                            <div class="action-log" id="actionLog">
+                                <div class="log-entry">
+                                    <span class="log-time">00:00:00</span>
+                                    <span class="log-message">Dashboard loaded</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bot-info-card">
+                            <h3><i class="fas fa-robot"></i> Bot Information</h3>
+                            <div class="info-list">
+                                <div class="info-item">
+                                    <span class="info-label">Bot Name:</span>
+                                    <span class="info-value" id="botName">Alip Bot</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Version:</span>
+                                    <span class="info-value" id="botVersion">v10.5.0</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">API URL:</span>
+                                    <span class="info-value" id="botApiUrl">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Platform:</span>
+                                    <span class="info-value">WhatsApp Baileys</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Important Notes</h3>
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Warning:</strong> Bot control actions may take a few moments to complete.
+                            Make sure the bot server is accessible before performing actions.
+                        </div>
+                        <ul class="control-notes">
+                            <li><i class="fas fa-info-circle"></i> <strong>Start:</strong> Activates the bot if it's
+                                stopped</li>
+                            <li><i class="fas fa-info-circle"></i> <strong>Restart:</strong> Restarts the bot process
+                                (recommended for updates)</li>
+                            <li><i class="fas fa-info-circle"></i> <strong>Stop:</strong> Stops the bot completely (use
+                                with caution)</li>
+                            <li><i class="fas fa-clock"></i> All actions are logged and can be monitored</li>
                         </ul>
                     </div>
                 </section>
@@ -471,4 +580,5 @@
 
     <script src="dashboard.js"></script>
 </body>
+
 </html>

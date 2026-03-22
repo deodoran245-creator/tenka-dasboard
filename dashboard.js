@@ -110,7 +110,8 @@ function switchSection(sectionName) {
         'users': 'Users',
         'groups': 'Groups',
         'settings': 'Settings',
-        'credentials': 'Credentials'
+        'credentials': 'Credentials',
+        'bot-control': 'Bot Control'
     };
     document.getElementById('breadcrumbText').textContent = sectionTitles[sectionName] || 'Dashboard';
 
@@ -143,6 +144,9 @@ function loadSectionData(section) {
             break;
         case 'credentials':
             initializeCredentialsSection();
+            break;
+        case 'bot-control':
+            initializeBotControlSection();
             break;
     }
 }
@@ -1148,4 +1152,196 @@ function setupCredentialsEventListeners() {
 function initializeCredentialsSection() {
     loadCredentials();
     setupCredentialsEventListeners();
+}
+
+// ==================== BOT CONTROL FUNCTIONS ====================
+async function loadBotStatus() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/bot/status`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('dashboardToken')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            updateBotStatusDisplay(data);
+        } else {
+            updateBotStatusDisplay({ status: 'unknown', uptime: 0 });
+        }
+    } catch (error) {
+        console.error('Load bot status error:', error);
+        updateBotStatusDisplay({ status: 'error', uptime: 0 });
+    }
+}
+
+function updateBotStatusDisplay(data) {
+    const statusElement = document.getElementById('currentBotStatus');
+    const uptimeElement = document.getElementById('botUptime');
+    const lastCheckElement = document.getElementById('lastStatusCheck');
+
+    if (statusElement) {
+        statusElement.textContent = data.status || 'unknown';
+        statusElement.className = `status-value status-${data.status || 'unknown'}`;
+    }
+
+    if (uptimeElement) {
+        const uptime = data.uptime || 0;
+        const hours = Math.floor(uptime / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        const seconds = uptime % 60;
+        uptimeElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    if (lastCheckElement) {
+        lastCheckElement.textContent = new Date().toLocaleTimeString();
+    }
+}
+
+async function startBot() {
+    if (!confirm('Are you sure you want to START the bot?')) return;
+
+    try {
+        showAlert('Starting bot...', 'info');
+        addActionLog('Starting bot...');
+
+        const response = await fetch(`${API_BASE_URL}/bot/start`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('dashboardToken')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('Bot start initiated successfully!', 'success');
+            addActionLog('Bot start command sent');
+            setTimeout(() => loadBotStatus(), 2000);
+        } else {
+            showAlert(data.message || 'Failed to start bot', 'error');
+            addActionLog('Bot start failed: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Start bot error:', error);
+        showAlert('Failed to start bot', 'error');
+        addActionLog('Bot start error: ' + error.message);
+    }
+}
+
+async function restartBot() {
+    if (!confirm('Are you sure you want to RESTART the bot? This will temporarily disconnect all users.')) return;
+
+    try {
+        showAlert('Restarting bot...', 'info');
+        addActionLog('Restarting bot...');
+
+        const response = await fetch(`${API_BASE_URL}/bot/restart`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('dashboardToken')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('Bot restart initiated successfully!', 'success');
+            addActionLog('Bot restart command sent');
+            setTimeout(() => loadBotStatus(), 3000);
+        } else {
+            showAlert(data.message || 'Failed to restart bot', 'error');
+            addActionLog('Bot restart failed: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Restart bot error:', error);
+        showAlert('Failed to restart bot', 'error');
+        addActionLog('Bot restart error: ' + error.message);
+    }
+}
+
+async function stopBot() {
+    if (!confirm('Are you sure you want to STOP the bot? This will disconnect all users and stop all services.')) return;
+
+    try {
+        showAlert('Stopping bot...', 'warning');
+        addActionLog('Stopping bot...');
+
+        const response = await fetch(`${API_BASE_URL}/bot/stop`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('dashboardToken')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showAlert('Bot stop initiated successfully!', 'success');
+            addActionLog('Bot stop command sent');
+            setTimeout(() => loadBotStatus(), 2000);
+        } else {
+            showAlert(data.message || 'Failed to stop bot', 'error');
+            addActionLog('Bot stop failed: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Stop bot error:', error);
+        showAlert('Failed to stop bot', 'error');
+        addActionLog('Bot stop error: ' + error.message);
+    }
+}
+
+function addActionLog(message) {
+    const logContainer = document.getElementById('actionLog');
+    if (!logContainer) return;
+
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'log-time';
+    timeSpan.textContent = new Date().toLocaleTimeString();
+
+    const messageSpan = document.createElement('span');
+    messageSpan.className = 'log-message';
+    messageSpan.textContent = message;
+
+    logEntry.appendChild(timeSpan);
+    logEntry.appendChild(messageSpan);
+
+    // Add to top of log
+    logContainer.insertBefore(logEntry, logContainer.firstChild);
+
+    // Keep only last 10 entries
+    while (logContainer.children.length > 10) {
+        logContainer.removeChild(logContainer.lastChild);
+    }
+}
+
+function setupBotControlEventListeners() {
+    // Bot control buttons
+    const startBtn = document.getElementById('startBotBtn');
+    const restartBtn = document.getElementById('restartBotBtn');
+    const stopBtn = document.getElementById('stopBotBtn');
+    const refreshBtn = document.getElementById('refreshBotStatus');
+
+    if (startBtn) startBtn.addEventListener('click', startBot);
+    if (restartBtn) restartBtn.addEventListener('click', restartBot);
+    if (stopBtn) stopBtn.addEventListener('click', stopBot);
+    if (refreshBtn) refreshBtn.addEventListener('click', loadBotStatus);
+}
+
+function initializeBotControlSection() {
+    loadBotStatus();
+    setupBotControlEventListeners();
+
+    // Set API URL display
+    const apiUrlElement = document.getElementById('botApiUrl');
+    if (apiUrlElement) {
+        apiUrlElement.textContent = API_BASE_URL.replace('/api', '');
+    }
 }

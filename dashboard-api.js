@@ -33,42 +33,36 @@ app.use(cors({
 
 // ==================== AUTHENTICATION ====================
 
-// Root route - serve login page
+// Root route - serve login page or dashboard based on token
 app.get('/', (req, res) => {
     const token = req.query.token || req.headers.authorization?.split(' ')[1];
     
     if (token && verifyToken(token)) {
         // User already logged in, serve dashboard
-        res.sendFile(path.join(__dirname, 'dashboard.html'));
+        return res.sendFile(path.join(__dirname, 'dashboard.html'));
     } else {
         // Serve login page
-        res.sendFile(path.join(__dirname, 'login.html'));
+        return res.sendFile(path.join(__dirname, 'login.html'));
     }
 });
 
-// ==================== AUTHENTICATION ====================
+// Serve HTML files directly
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
 
-// Token verification function
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// ==================== TOKEN VERIFICATION ====================
 function verifyToken(token) {
     if (!token || token === 'undefined') return false;
     // Simple token verification - in production use JWT
     return token.includes(':');
 }
 
-// Root route - serve login page
-app.get('/', (req, res) => {
-    const token = req.query.token || req.headers.authorization?.split(' ')[1];
-    
-    if (token && verifyToken(token)) {
-        // User already logged in, serve dashboard
-        res.sendFile(path.join(__dirname, 'dashboard.html'));
-    } else {
-        // Serve login page
-        res.sendFile(path.join(__dirname, 'login.html'));
-    }
-});
-
-// ==================== AUTHENTICATION ====================
+// Generate token for login
 function generateToken(email, username) {
     return Buffer.from(email + ':' + username + ':' + Date.now()).toString('base64');
 }

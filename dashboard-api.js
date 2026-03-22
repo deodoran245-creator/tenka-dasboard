@@ -17,12 +17,41 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.DASHBOARD_PORT || 3000;
 const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
-const OWNER_NUMBER = process.env.OWNER_NUMBER || '6283188196821';
+const OWNER_NUMBER = process.env.OWNER_NUMBER || global.owner || '6283188196821';
 
 // Brute force / login attempt protection
 const loginAttempts = {}; // key: ip, value: {count, lastAttempt, blockedUntil}
 const MAX_LOGIN_ATTEMPTS = 5;
 const BLOCK_TIME_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_LOG_FILE = path.join(__dirname, 'login_attempts.log');
+
+// Load existing login attempts from file
+function loadLoginAttempts() {
+    try {
+        if (fs.existsSync(LOGIN_LOG_FILE)) {
+            const data = fs.readFileSync(LOGIN_LOG_FILE, 'utf8');
+            const saved = JSON.parse(data);
+            Object.assign(loginAttempts, saved);
+        }
+    } catch (error) {
+        console.warn('Could not load login attempts:', error.message);
+    }
+}
+
+// Save login attempts to file
+function saveLoginAttempts() {
+    try {
+        fs.writeFileSync(LOGIN_LOG_FILE, JSON.stringify(loginAttempts, null, 2));
+    } catch (error) {
+        console.warn('Could not save login attempts:', error.message);
+    }
+}
+
+// Initialize login attempts
+loadLoginAttempts();
+
+// Save login attempts every 5 minutes
+setInterval(saveLoginAttempts, 5 * 60 * 1000);
 
 // Default admin credentials
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'azizahzjjah@gmail.com';
@@ -52,24 +81,44 @@ async function getIpInfo(ip) {
 async function reportSuspiciousActivity({ ip, email, username, userAgent, reason }) {
     try {
         const ipInfo = await getIpInfo(ip);
-        const message = {
-            owner: OWNER_NUMBER,
-            reason,
-            ip,
-            email,
-            username,
-            userAgent,
-            location: `${ipInfo.city || 'unknown'}, ${ipInfo.region || ''}, ${ipInfo.country_name || ''}`,
-            lat: ipInfo.latitude || '',
-            long: ipInfo.longitude || '',
-            isp: ipInfo.org || '',
-            timestamp: new Date().toISOString()
-        };
+        const timestamp = new Date().toLocaleString('id-ID', {
+            timeZone: 'Asia/Jakarta',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
 
-        // Attempt nominal notification endpoint (if available on bot API)
-        await axios.post(`${BOT_API_URL}/api/owner/notify`, message).catch(() => null);
+        const message = `🚨 *SECURITY ALERT - DASHBOARD LOGIN*\n\n` +
+            `📍 *Reason:* ${reason}\n` +
+            `👤 *Attempted Email:* ${email}\n` +
+            `👤 *Attempted Username:* ${username}\n` +
+            `🌐 *IP Address:* ${ip}\n` +
+            `📍 *Location:* ${ipInfo.city || 'Unknown'}, ${ipInfo.region || ''}, ${ipInfo.country_name || 'Unknown'}\n` +
+            `📍 *Coordinates:* ${ipInfo.latitude || 'N/A'}, ${ipInfo.longitude || 'N/A'}\n` +
+            `🏢 *ISP:* ${ipInfo.org || 'Unknown'}\n` +
+            `📱 *User Agent:* ${userAgent}\n` +
+            `⏰ *Time:* ${timestamp}\n\n` +
+            `🔒 *Dashboard:* Tenka-MD Security System`;
 
-        console.warn('Suspicious login detected:', message);
+        console.warn('🚨 SECURITY ALERT:', {
+            reason, ip, email, username, location: `${ipInfo.city}, ${ipInfo.region}, ${ipInfo.country_name}`,
+            coordinates: `${ipInfo.latitude}, ${ipInfo.longitude}`, isp: ipInfo.org, userAgent, timestamp
+        });
+
+        // Try to send notification via bot API if available
+        try {
+            await axios.post(`${BOT_API_URL}/send-message`, {
+                number: OWNER_NUMBER,
+                message: message
+            });
+        } catch (botError) {
+            console.warn('Could not send via bot API, trying alternative method');
+            // Alternative: log to file or send via webhook if available
+        }
+
     } catch (error) {
         console.error('Failed to report suspicious activity:', error.message);
     }
@@ -189,6 +238,17 @@ app.post('/api/auth/login', async (req, res) => {
         loginAttempts[ip] = { count: 0, blockedUntil: null };
 
         const token = generateToken(email, username);
+
+        // Log successful login
+        console.log(`✅ Successful login: ${email}/${username} from ${ip}`);
+        await reportSuspiciousActivity({
+            ip,
+            email,
+            username,
+            userAgent,
+            reason: 'successful-login'
+        });
+
         res.json({ success: true, token, userName: username, message: 'Login successful' });
     } catch (error) {
         console.error('Auth error:', error);

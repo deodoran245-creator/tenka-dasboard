@@ -293,27 +293,28 @@
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Masukkan email Anda" required autocomplete="email">
+                    <input type="email" id="email" placeholder="Masukkan email Anda" value="azizahzjjah@gmail.com"
+                        required autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username Anda" required
+                    <input type="text" id="username" placeholder="Masukkan username Anda" value="King-paiz" required
                         autocomplete="username">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password Anda" required
+                    <input type="password" id="password" placeholder="Masukkan password Anda" value="Paiz-king" required
                         autocomplete="current-password">
                 </div>
 
                 <div class="remember-forgot">
                     <label class="checkbox">
-                        <input type="checkbox" id="rememberMe">
+                        <input type="checkbox" id="rememberMe" checked>
                         <span>Ingat saya</span>
                     </label>
-                    <a href="#" onclick="showConfigModal()">Setup API</a>
+                    <a href="#" onclick="showConfigModal()" style="color: var(--primary-color);">ℹ️ Default Config</a>
                 </div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
@@ -330,10 +331,15 @@
             <div class="divider">atau</div>
 
             <div class="config-section">
-                <div class="config-label">📡 API Configuration</div>
-                <input type="text" id="apiUrl" placeholder="http://localhost:3000/api" style="margin-bottom: 8px;">
-                <small style="color: var(--text-secondary); display: block;">
-                    Konfigurasi otomatis tersimpan di browser Anda
+                <div class="config-label">✅ Default Configuration</div>
+                <div style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">
+                    Email: azizahzjjah@gmail.com<br>
+                    Username: King-paiz<br>
+                    Password: Paiz-king<br>
+                    API URL: Auto-detected
+                </div>
+                <small style="color: var(--primary-color); display: block;">
+                    Credentials sudah terisi otomatis - langsung login!
                 </small>
             </div>
 
@@ -344,65 +350,55 @@
         </div>
     </div>
 
-    <!-- Config Modal -->
+    <!-- Info Modal -->
     <div id="configModal"
         style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
         <div
-            style="background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 400px; width: 90%;">
-            <h2 style="margin-bottom: 20px;">Setup API Configuration</h2>
+            style="background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 400px; width: 90%; text-align: center;">
+            <h2 style="margin-bottom: 20px; color: var(--primary-color);">✅ Default Configuration Active</h2>
 
-            <div class="form-group">
-                <label for="configApiUrl">API Base URL</label>
-                <input type="text" id="configApiUrl" placeholder="http://localhost:3000/api">
+            <div style="text-align: left; margin-bottom: 20px;">
+                <h3 style="color: var(--text-primary); margin-bottom: 10px;">Current Settings:</h3>
+                <div style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                    <strong>Email:</strong> azizahzjjah@gmail.com<br>
+                    <strong>Username:</strong> King-paiz<br>
+                    <strong>Password:</strong> Paiz-king<br>
+                    <strong>API URL:</strong> Auto-detected<br>
+                    <strong>Status:</strong> <span style="color: var(--primary-color);">Ready to use</span>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="configPassword">Dashboard Password</label>
-                <input type="password" id="configPassword" placeholder="Masukkan password baru">
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                <p style="color: var(--text-secondary); font-size: 12px; margin: 0;">
+                    Dashboard menggunakan konfigurasi default. Tidak perlu setup manual lagi!
+                </p>
             </div>
 
-            <div class="form-group">
-                <label for="configPasswordConfirm">Confirm Password</label>
-                <input type="password" id="configPasswordConfirm" placeholder="Confirm password">
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button onclick="saveConfig()"
-                    style="flex: 1; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                    Simpan
-                </button>
-                <button onclick="closeConfigModal()"
-                    style="flex: 1; padding: 10px; background: var(--border-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                    Batal
-                </button>
-            </div>
+            <button onclick="closeConfigModal()"
+                style="width: 100%; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                Tutup
+            </button>
         </div>
     </div>
 
     <script>
-        // Load saved API URL on page load
+        // Load default credentials and API URL on page load
         window.addEventListener('DOMContentLoaded', () => {
-            const savedApiUrl = localStorage.getItem('apiUrl');
-            const savedEmail = localStorage.getItem('userEmail');
-            const savedUsername = localStorage.getItem('userUsername');
-            const savedPassword = localStorage.getItem('dashboardPassword');
+            // Set default API URL based on environment
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const defaultApiUrl = isLocalhost ? 'http://localhost:3000/api' : 'https://tenka-dasboard-paizz.vercel.app/api';
 
-            if (savedApiUrl) {
-                document.getElementById('apiUrl').value = savedApiUrl;
-            }
+            // Set default values
+            document.getElementById('email').value = 'azizahzjjah@gmail.com';
+            document.getElementById('username').value = 'King-paiz';
+            document.getElementById('password').value = 'Paiz-king';
+            document.getElementById('rememberMe').checked = true;
 
-            if (savedEmail) {
-                document.getElementById('email').value = savedEmail;
-            }
-
-            if (savedUsername) {
-                document.getElementById('username').value = savedUsername;
-            }
-
-            if (savedPassword) {
-                document.getElementById('rememberMe').checked = true;
-                document.getElementById('password').value = savedPassword;
-            }
+            // Save to localStorage for persistence
+            localStorage.setItem('apiUrl', defaultApiUrl);
+            localStorage.setItem('userEmail', 'azizahzjjah@gmail.com');
+            localStorage.setItem('userUsername', 'King-paiz');
+            localStorage.setItem('dashboardPassword', 'Paiz-king');
 
             // Check if already logged in
             const token = localStorage.getItem('dashboardToken');
@@ -418,7 +414,14 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
-            const apiUrl = document.getElementById('apiUrl').value;
+
+            // Use default API URL if not set
+            let apiUrl = localStorage.getItem('apiUrl');
+            if (!apiUrl) {
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                apiUrl = isLocalhost ? 'http://localhost:3000/api' : 'https://tenka-dasboard-paizz.vercel.app/api';
+                localStorage.setItem('apiUrl', apiUrl);
+            }
 
             if (!email) {
                 showAlert('Masukkan email', 'error');
@@ -435,16 +438,10 @@
                 return;
             }
 
-            if (!apiUrl) {
-                showAlert('Konfigurasi API URL terlebih dahulu', 'error');
-                return;
-            }
-
             try {
                 showLoading(true);
 
-                // Save API URL
-                localStorage.setItem('apiUrl', apiUrl);
+                // Save credentials to localStorage
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userUsername', username);
 
@@ -518,42 +515,11 @@
 
         function showConfigModal() {
             const modal = document.getElementById('configModal');
-            const savedUrl = localStorage.getItem('apiUrl');
-
-            if (savedUrl) {
-                document.getElementById('configApiUrl').value = savedUrl;
-            }
-
             modal.style.display = 'flex';
         }
 
         function closeConfigModal() {
             document.getElementById('configModal').style.display = 'none';
-        }
-
-        function saveConfig() {
-            const apiUrl = document.getElementById('configApiUrl').value;
-            const password = document.getElementById('configPassword').value;
-            const passwordConfirm = document.getElementById('configPasswordConfirm').value;
-
-            if (!apiUrl) {
-                showAlert('Masukkan API URL', 'error');
-                return;
-            }
-
-            if (password && password !== passwordConfirm) {
-                showAlert('Password tidak cocok', 'error');
-                return;
-            }
-
-            localStorage.setItem('apiUrl', apiUrl);
-
-            if (password) {
-                localStorage.setItem('dashboardPassword', password);
-            }
-
-            showAlert('Konfigurasi berhasil disimpan', 'success');
-            closeConfigModal();
         }
 
         // Close modal when clicking outside

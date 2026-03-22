@@ -1,5 +1,21 @@
 // Dashboard Configuration
-const API_BASE_URL = localStorage.getItem('apiUrl') || 'http://localhost:3000/api';
+// Auto-detect API URL based on current domain
+function getApiBaseUrl() {
+    const savedUrl = localStorage.getItem('apiUrl');
+    if (savedUrl) return savedUrl;
+
+    // Auto-detect based on current domain
+    const currentDomain = window.location.origin;
+    if (currentDomain.includes('vercel.app') || currentDomain.includes('localhost') === false) {
+        // For hosted version, use the same domain
+        return `${currentDomain}/api`;
+    } else {
+        // For local development
+        return 'http://localhost:3000/api';
+    }
+}
+
+const API_BASE_URL = getApiBaseUrl();
 const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
 
 // Global State

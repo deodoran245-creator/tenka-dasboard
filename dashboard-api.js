@@ -17,6 +17,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.DASHBOARD_PORT || 3000;
 const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
+const OWNER_NUMBER = process.env.OWNER_NUMBER || '6283188196821';
+
+// Brute force / login attempt protection
+const loginAttempts = {}; // key: ip, value: {count, lastAttempt, blockedUntil}
+const MAX_LOGIN_ATTEMPTS = 5;
+const BLOCK_TIME_MS = 15 * 60 * 1000; // 15 minutes
 
 // Default admin credentials
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'azizahzjjah@gmail.com';
@@ -32,6 +38,42 @@ app.use(cors({
 }));
 
 // ==================== AUTHENTICATION ====================
+
+async function getIpInfo(ip) {
+    try {
+        const cleanIp = ip.replace('::ffff:', '');
+        const response = await axios.get(`https://ipapi.co/${cleanIp}/json/`, { timeout: 5000 });
+        return response.data;
+    } catch (err) {
+        return {};
+    }
+}
+
+async function reportSuspiciousActivity({ ip, email, username, userAgent, reason }) {
+    try {
+        const ipInfo = await getIpInfo(ip);
+        const message = {
+            owner: OWNER_NUMBER,
+            reason,
+            ip,
+            email,
+            username,
+            userAgent,
+            location: `${ipInfo.city || 'unknown'}, ${ipInfo.region || ''}, ${ipInfo.country_name || ''}`,
+            lat: ipInfo.latitude || '',
+            long: ipInfo.longitude || '',
+            isp: ipInfo.org || '',
+            timestamp: new Date().toISOString()
+        };
+
+        // Attempt nominal notification endpoint (if available on bot API)
+        await axios.post(`${BOT_API_URL}/api/owner/notify`, message).catch(() => null);
+
+        console.warn('Suspicious login detected:', message);
+    } catch (error) {
+        console.error('Failed to report suspicious activity:', error.message);
+    }
+}
 
 // Root route - serve login page or dashboard based on token
 app.get('/', (req, res) => {
@@ -81,17 +123,78 @@ const authMiddleware = (req, res, next) => {
 };
 
 // ==================== AUTH ROUTES ====================
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        
-        if (!email) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Email required' 
-            });
+        const ip = req.ip || req.connection.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || 'unknown';
+
+        // Brute-force protection
+        const attempt = loginAttempts[ip] || { count: 0, blockedUntil: null };
+
+        if (attempt.blockedUntil && attempt.blockedUntil > Date.now()) {
+            await reportSuspiciousActivity({ ip, email, username, userAgent, reason: 'blocked-login-rate-limit' });
+            return res.status(429).json({ success: false, message: 'Too many login attempts, try again later' });
         }
 
+        if (!email) {
+            attempt.count += 1;
+            loginAttempts[ip] = attempt;
+            return res.status(400).json({ success: false, message: 'Email required' });
+        }
+
+        if (!username) {
+            attempt.count += 1;
+            loginAttempts[ip] = attempt;
+            return res.status(400).json({ success: false, message: 'Username required' });
+        }
+
+        if (!password) {
+            attempt.count += 1;
+            loginAttempts[ip] = attempt;
+            return res.status(400).json({ success: false, message: 'Password required' });
+        }
+
+        if (email !== ADMIN_EMAIL) {
+            attempt.count += 1;
+            if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+                attempt.blockedUntil = Date.now() + BLOCK_TIME_MS;
+            }
+            loginAttempts[ip] = attempt;
+            await reportSuspiciousActivity({ ip, email, username, userAgent, reason: 'invalid-email' });
+            return res.status(401).json({ success: false, message: 'Invalid email' });
+        }
+
+        if (username !== ADMIN_USERNAME) {
+            attempt.count += 1;
+            if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+                attempt.blockedUntil = Date.now() + BLOCK_TIME_MS;
+            }
+            loginAttempts[ip] = attempt;
+            await reportSuspiciousActivity({ ip, email, username, userAgent, reason: 'invalid-username' });
+            return res.status(401).json({ success: false, message: 'Invalid username' });
+        }
+
+        if (password !== ADMIN_PASSWORD) {
+            attempt.count += 1;
+            if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+                attempt.blockedUntil = Date.now() + BLOCK_TIME_MS;
+            }
+            loginAttempts[ip] = attempt;
+            await reportSuspiciousActivity({ ip, email, username, userAgent, reason: 'invalid-password' });
+            return res.status(401).json({ success: false, message: 'Invalid password' });
+        }
+
+        // Reset on successful login
+        loginAttempts[ip] = { count: 0, blockedUntil: null };
+
+        const token = generateToken(email, username);
+        res.json({ success: true, token, userName: username, message: 'Login successful' });
+    } catch (error) {
+        console.error('Auth error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
         if (!username) {
             return res.status(400).json({ 
                 success: false, 

@@ -293,19 +293,18 @@
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Masukkan email Anda" value="azizahzjjah@gmail.com"
-                        required autocomplete="email">
+                    <input type="email" id="email" placeholder="Masukkan email Anda" required autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username Anda" value="King-paiz" required
+                    <input type="text" id="username" placeholder="Masukkan username Anda" required
                         autocomplete="username">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password Anda" value="Paiz-king" required
+                    <input type="password" id="password" placeholder="Masukkan password Anda" required
                         autocomplete="current-password">
                 </div>
 
@@ -382,29 +381,25 @@
     </div>
 
     <script>
-        // Load default credentials and API URL on page load
+        // Initialize login page
         window.addEventListener('DOMContentLoaded', () => {
-            // Set default API URL based on environment
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const defaultApiUrl = isLocalhost ? 'http://localhost:3000/api' : 'https://tenka-dasboard-paizz.vercel.app/api';
-
-            // Set default values
-            document.getElementById('email').value = 'azizahzjjah@gmail.com';
-            document.getElementById('username').value = 'King-paiz';
-            document.getElementById('password').value = 'Paiz-king';
-            document.getElementById('rememberMe').checked = true;
-
-            // Save to localStorage for persistence
-            localStorage.setItem('apiUrl', defaultApiUrl);
-            localStorage.setItem('userEmail', 'azizahzjjah@gmail.com');
-            localStorage.setItem('userUsername', 'King-paiz');
-            localStorage.setItem('dashboardPassword', 'Paiz-king');
-
-            // Check if already logged in
             const token = localStorage.getItem('dashboardToken');
             if (token) {
                 window.location.href = 'dashboard.html';
+                return;
             }
+
+            // Prefer a safe API URL from localStorage, otherwise default
+            const savedApiUrl = localStorage.getItem('apiUrl');
+            if (!savedApiUrl) {
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                localStorage.setItem('apiUrl', isLocalhost ? 'http://localhost:3000/api' : `${window.location.origin}/api`);
+            }
+
+            // Clear any stored credentials to avoid local data exposure
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userUsername');
+            localStorage.removeItem('dashboardPassword');
         });
 
         async function handleLogin(event) {
@@ -440,10 +435,6 @@
 
             try {
                 showLoading(true);
-
-                // Save credentials to localStorage
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userUsername', username);
 
                 // Attempt login
                 const response = await fetch(`${apiUrl}/auth/login`, {

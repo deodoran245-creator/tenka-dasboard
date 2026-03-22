@@ -2,7 +2,7 @@
     "version": 2,
     "functions": {
         "dashboard-api.js": {
-            "runtime": "@vercel/node"
+            "runtime": "nodejs24.x"
         }
     },
     "routes": [

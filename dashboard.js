@@ -768,7 +768,7 @@ async function loadSettings() {
         const data = await apiCall('/settings');
         
         document.getElementById('botPrefix').value = data?.prefix || '.';
-        document.getElementById('botName').value = data?.name || 'Alip Bot';
+        document.getElementById('botName').value = data?.name || 'Tenka-MD';
         document.getElementById('botStatusSelect').value = data?.status || 'online';
         document.getElementById('apiKey').value = '••••••••••••••••';
 

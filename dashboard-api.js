@@ -1,7 +1,7 @@
 /**
- * Alip Bot Dashboard API Server
+ * Tenka-MD Dashboard API Server
  * Standalone server untuk dashboard yang terhubung ke database
- * 
+ *
  * Usage:
  * npm install express cors axios dotenv mongodb
  * node dashboard-api.js
@@ -585,7 +585,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
             success: true,
             data: response.data || {
                 prefix: '.',
-                name: 'Alip Bot',
+                name: 'Tenka-MD',
                 status: 'online'
             }
         });
@@ -595,7 +595,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
             success: true,
             data: {
                 prefix: '.',
-                name: 'Alip Bot',
+                name: 'Tenka-MD',
                 status: 'online'
             }
         });
@@ -964,7 +964,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║     Alip Bot Dashboard API Server Started! 🚀             ║
+║     Tenka-MD Dashboard API Server Started! 🚀             ║
 ╠═══════════════════════════════════════════════════════════╣
 ║  Status: Running                                          ║
 ║  Port: ${PORT}                                               ║
